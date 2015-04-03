@@ -12,7 +12,12 @@ import twitter4j.TwitterStreamFactory;
 import twitter4j.auth.AccessToken;
 import twitter4j.conf.ConfigurationBuilder;
 
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.PriorityQueue;
 import java.util.Scanner;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.regex.*;
 
 /**
  * Top-k over a Sliding Window
@@ -21,13 +26,67 @@ import java.util.Scanner;
  */
 public class App 
 {
+	static final int queueSize = 10000;
+	static final int k = 10;
+	static LinkedBlockingQueue<String> myQueue = new LinkedBlockingQueue<String>(queueSize);
+	static HashMap<String, Integer> myHash = new HashMap<String, Integer>();
+	static PriorityQueue<String> topk = new PriorityQueue<String>(k, new TopKComparator(myHash));
+	
+	// Following are created as member variables to reduce overhead of
+	// instantiating and re-instantiating them every time in the callback
+	static String tweetText = new String();
+	static String screenName = new String();
+	static String hashTag = new String();
+	static String removedHashTag = new String();
+	static int hashTagCount;
+
+	
     public static void main( String[] args ) throws Exception
     {
-        System.out.println( "Hello World!" );
+
         StatusListener listener = new StatusListener() {
         	
             public void onStatus(Status status) {
-                System.out.println("@" + status.getUser().getScreenName() + " - " + status.getText());
+            	
+            	tweetText = status.getText();
+            	screenName = status.getUser().getScreenName();
+                
+                //Extract hashtags
+                Pattern pattern = Pattern.compile("#\\w+");
+                Matcher myMatch = pattern.matcher(tweetText);
+                
+                while(myMatch.find()) {
+                	hashTag = myMatch.group();
+
+                	if(myHash.containsKey(hashTag)) {
+                		myHash.put(hashTag, myHash.get(hashTag) + 1);
+                	} else
+                		myHash.put(hashTag, 1);
+                	
+                	if(myQueue.size() == queueSize) {
+                		removedHashTag = myQueue.poll();
+                		hashTagCount = myHash.get(removedHashTag);
+                		if(hashTagCount > 1)
+                			myHash.put(removedHashTag, hashTagCount - 1);
+                		else
+                			myHash.remove(removedHashTag);
+                	}                		
+                	myQueue.offer(hashTag);
+                	
+                	if(!topk.contains(hashTag)) {
+                		topk.add(hashTag);
+                	} else {
+                		topk.remove(hashTag);
+                		topk.add(hashTag);
+                	}
+                	
+                	while(topk.size() > k) topk.poll();
+                	
+                	System.out.println(topk.toString());
+                	//System.out.println(myHash.toString());
+                }
+                
+                
                 
             }
 
@@ -37,7 +96,7 @@ public class App
             }
 
             public void onTrackLimitationNotice(int numberOfLimitedStatuses) {
-                System.out.println("Got track limitation notice:" + numberOfLimitedStatuses);
+               
             }
 
             public void onScrubGeo(long userId, long upToStatusId) {
@@ -56,6 +115,8 @@ public class App
         //Get an instance of scanner
         Scanner scanner = new Scanner(System.in);
         
+        System.out.println("Hit on Enter to begin!");
+        
         //Flush already existing input
         scanner.nextLine();
         
@@ -70,7 +131,8 @@ public class App
         System.out.println("Enter your Access Token");
         String accessToken = scanner.nextLine();
         System.out.println("Enter your Access Token Key");
-        String accessTokenSecret = scanner.nextLine();
+        String accessTokenSecret = scanner.nextLine();   
+       
         
 		TwitterStream twitterStream = new TwitterStreamFactory(
 				new ConfigurationBuilder().setJSONStoreEnabled(true).build())
@@ -102,4 +164,16 @@ public class App
         
         scanner.close();
     }
+}
+
+class TopKComparator implements Comparator<String> {
+	HashMap<String, Integer> h;
+
+	public TopKComparator(HashMap<String, Integer> h) {
+		this.h = h;
+	}
+	
+	public int compare(String s1, String s2) {
+		return (int)(h.get(s1) - h.get(s2));
+	}
 }
