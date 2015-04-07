@@ -80,9 +80,10 @@ public class App
                 		removedHashTag = myQueue.poll();
                 		hashTagCount = myHash.get(removedHashTag);
                 		if(hashTagCount > 1)
+                			//Reduce the count of Hashtag removed from queue
                 			myHash.put(removedHashTag, hashTagCount - 1);
                 		else
-                			myHash.remove(removedHashTag);
+                			myHash.remove(removedHashTag); //remove from Hash Map if count is zero
                 	}
                 	
                 	//Enqueue the hashTag to the Queue
@@ -127,7 +128,7 @@ public class App
 
             public void onException(Exception ex) {
             	System.out.println("This is just an Exception from Twitter4j, Nothing to Panic!!");
-                ex.printStackTrace();
+                //ex.printStackTrace();
             }
         };
         
@@ -198,7 +199,10 @@ public class App
         	}
         	
         	//Equivalent to querying for top-k
+        	System.out.println("Trending Topics: ");
         	System.out.println(topk.toString());
+        	System.out.println();
+        	System.out.println();
 
         }
     }
