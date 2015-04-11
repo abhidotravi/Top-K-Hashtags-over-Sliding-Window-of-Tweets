@@ -86,8 +86,6 @@ Eclipse Steps for Compilation
 -----------------------
 1. Extract the topk.tar
 
-2. Once maven plugin is enabled on Eclipse, go to File -> Import -> Existing Maven Projects and give the path of pom.xml on your machine.
-
-Click on “Finish” and the maven project is loaded on eclipse.
+2. Once maven plugin is enabled on Eclipse, go to File -> Import -> Existing Maven Projects and give the path of pom.xml on your machine. Click on “Finish” and the maven project is loaded on eclipse.
 
 3. Now hit “RUN” and all the dependencies will automatically be downloaded and the code will be compiled and the application will run.
