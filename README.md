@@ -52,9 +52,7 @@ Implementation details
 
 1. User is asked to enter the credentials required to establish a twitter stream connection.
 
-2. User is asked to enter number of keywords to subscribe for. ZERO is entered if there is no preference.
-
-If preference is given, only those tweets with the entered keywords is subscribed.
+2. User is asked to enter number of keywords to subscribe for. ZERO is entered if there is no preference. If preference is given, only those tweets with the entered keywords is subscribed.
 
 3. OnStatus function is called every time a tweet is obtained.
 
